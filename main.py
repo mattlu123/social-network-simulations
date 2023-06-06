@@ -4,7 +4,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 
 #parameters
-n = 100
+n = 1000
 p = 0.5
 q = 0.9
 vg, vb = 1, -1
@@ -31,13 +31,23 @@ for agent in ordering:
     neighbors = [n for n in tree.neighbors(agent)]
     actions = nx.get_node_attributes(tree, "action")
     n_actions = [actions[key] for key in neighbors]
+    choice = np.random.choice([theta, 1 - theta], p=[q, 1 - q])
+
     if len(neighbors) < 2 or (len(n_actions) - n_actions.count(-1)) < 2:
-        choice = np.random.choice([theta, 1-theta], p=[q, 1-q])
         payoff = vg * ((p*signal)/(p*signal + (1-p)*(1-signal))) + vb * ((1-p)*(1-signal)/(p*signal + (1-p)*(1-signal)))
         tree.nodes[agent]["action"] = choice if payoff > 0 else 1-theta
+        continue
+
+    zeros = [num for num in n_actions if num == 0]
+    ones = [num for num in n_actions if num == 0]
+    if len(zeros) - len(ones) > 1:
+        tree.nodes[agent]["action"] = 0
+    elif len(ones) - len(zeros) > 1:
+        tree.nodes[agent]["action"] = 1
     else:
-        filtered_arr = [num for num in n_actions if num >= 0]
-        tree.nodes[agent]["action"] = stats.mode(filtered_arr, keepdims=True)[0][0]
+        payoff = vg * ((p * signal) / (p * signal + (1 - p) * (1 - signal))) + vb * (
+                    (1 - p) * (1 - signal) / (p * signal + (1 - p) * (1 - signal)))
+        tree.nodes[agent]["action"] = choice if payoff > 0 else 1 - theta
 
 #final measurements
 final_actions = np.array(list(nx.get_node_attributes(tree, "action").values()))
