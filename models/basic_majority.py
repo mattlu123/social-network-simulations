@@ -10,6 +10,7 @@ class BasicMajority:
         self.vb = vb
         self.network = network
 
+    #Make a single decision
     def make_decision(self, agent):
         signal = nx.get_node_attributes(self.network, "private signal")[agent]
         neighbors = [n for n in self.network.neighbors(agent)]

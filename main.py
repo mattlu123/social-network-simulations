@@ -4,13 +4,14 @@ from scipy import stats
 import matplotlib.pyplot as plt
 from models.basic_majority import BasicMajority
 from models.aggregation_dissemination import AggregationDissemination
+from utils import sim_n_times, plot_histograms
 
 #parameters
-n = 500
-p = 0.5
-q = 0.8
-vg, vb = 1, -1
-theta = np.random.choice([0, 1], p=[p, 1-p])
+n = 500 #number of agents
+p = 0.5 #ground truth probability
+q = 0.7 #private signal confidence
+vg, vb = 1, -1 #payoff coefficients
+theta = np.random.choice([0, 1], p=[p, 1-p]) #ground truth
 
 #graph construction
 tree = nx.random_tree(n=n, seed=0)
@@ -26,19 +27,27 @@ power_law = nx.barabasi_albert_graph(n, 3, seed=None, initial_graph=None)
 # nx.draw_spring(three_ary_tree, with_labels=True)
 # plt.show()
 
+def init_net(n, q, network):
+    index = np.around(np.linspace(0, n - 1, n)).astype(int)
 
-def run_sim(n, p, q, vg, vb, theta, network):
-    index = np.around(np.linspace(0, n-1, n)).astype(int)
+    #fixed private signal for all agents
     priv_signal = np.full(n, q)
     priv_signals = dict(zip(index, priv_signal))
+
+    #set initial actions to -1
     action = np.full(n, -1)
     actions = dict(zip(index, action))
     nx.set_node_attributes(network, priv_signals, "private signal")
     nx.set_node_attributes(network, actions, "action")
 
+def run_sim(n, p, q, vg, vb, theta, network):
+    #initialize network params
+    init_net(n, q, network)
+
     #create a random node ordering
     ordering = np.arange(n-1,-1,-1)
 
+    #construct the model
     basic_majority_model = BasicMajority(theta, q, p, vg, vb, network)
     basic_majority_model.make_decisions(ordering)
 
@@ -47,13 +56,9 @@ def run_sim(n, p, q, vg, vb, theta, network):
 
 # set node information
 def run_sim_aggregate(n, p, q, vg, vb, theta, network, hi, lo):
-    index = np.around(np.linspace(0, n-1, n)).astype(int)
-    priv_signal = np.full(n, q)
-    priv_signals = dict(zip(index, priv_signal))
-    action = np.full(n, -1)
-    actions = dict(zip(index, action))
-    nx.set_node_attributes(network, priv_signals, "private signal")
-    nx.set_node_attributes(network, actions, "action")
+
+    #initialize network params
+    init_net(n, q, network)
 
     #create a random node ordering
     ordering = np.arange(n-1,-1,-1)
@@ -65,40 +70,9 @@ def run_sim_aggregate(n, p, q, vg, vb, theta, network, hi, lo):
     return agg_dis_model.calc_success_rate()
 
 #results
-num_trials = 100
-total_runs = np.zeros(num_trials)
-
-for i in range(0, num_trials):
-    total_runs[i] = run_sim(n, p, q, vg, vb, theta, power_law)
-
-total_runs = np.array(total_runs)
-print("\nRegular")
-print(f"average learning rate: {np.mean(total_runs)}")
-print(f"Learning rate range: [{np.min(total_runs)}, {np.max(total_runs)}]")
-print(f"less than q: {len(total_runs[total_runs < q])}")
-
-for i in range(0, num_trials):
-    total_runs[i] = run_sim_aggregate(n, p, q, vg, vb, theta, power_law, 10, 10)
-
-total_runs = np.array(total_runs)
-print("\nAggregate")
-print(f"average learning rate: {np.mean(total_runs)}")
-print(f"Learning rate range: [{np.min(total_runs)}, {np.max(total_runs)}]")
-print(f"less than q: {len(total_runs[total_runs < q])}")
-
-
-
-# Compute the histogram
-#hist, bins = np.histogram(total_runs, bins=10)
-
-# Plot the histogram
-#plt.hist(total_runs, bins=10)
-#plt.xlabel('Value')
-#plt.ylabel('Frequency')
-#plt.title('Histogram')
-#plt.show()
-
-
-
-
-
+basic_majority_res = sim_n_times("Basic Majority Model", 10, run_sim,
+                                 (n, p, q, vg, vb, theta, power_law))
+aggregation_res = sim_n_times("Aggregation Model", 10, run_sim_aggregate,
+                              (n, p, q, vg, vb, theta, power_law, 10, 10))
+plot_histograms("Basic Majority Model", basic_majority_res)
+plot_histograms("Aggregation Model", aggregation_res)
