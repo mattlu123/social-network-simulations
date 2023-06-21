@@ -8,7 +8,7 @@ class AggregationDissemination(BasicMajority):
         self.hi_percentile = hi_percentile
         self.lo_percentile = lo_percentile
 
-    def get_top_percentile_nodes(self):
+    def get_top_percentile_nodes(self, high_val):
         # Get the degrees of all nodes in the graph
         degrees = dict(self.network.degree())
 
@@ -18,6 +18,10 @@ class AggregationDissemination(BasicMajority):
 
         # Find the nodes with degrees above the threshold
         top_percentile_nodes = [node for node, degree in degrees.items() if degree >= threshold_degree]
+
+        if high_val:
+            for agent in top_percentile_nodes:
+                self.network.nodes[agent]['high_value'] = 1
 
         return top_percentile_nodes
 
@@ -32,10 +36,10 @@ class AggregationDissemination(BasicMajority):
         # Find the neighbors with degrees below the threshold
         lowest_percentile_neighbors = [n for n, degree in degrees.items() if degree <= threshold_degree]
 
-        return lowest_percentile_neighbors
+        return np.random.permutation(lowest_percentile_neighbors)
 
-    def make_decisions(self, ordering):
-        highDegreeNodes = self.get_top_percentile_nodes()
+    def make_decisions(self, ordering, high_val):
+        highDegreeNodes = self.get_top_percentile_nodes(high_val)
         for agent in highDegreeNodes:
             lowDegreeNeighbors = self.get_lowest_percentile_neighbors(agent)
 
@@ -43,7 +47,6 @@ class AggregationDissemination(BasicMajority):
                 if self.network.nodes[Low_agent]["action"] == -1:
                     self.make_decision(Low_agent)
 
-            signal = nx.get_node_attributes(self.network, "private signal")[agent]
             neighbors = lowDegreeNeighbors
             actions = nx.get_node_attributes(self.network, "action")
             n_actions = [actions[key] for key in neighbors]
@@ -67,4 +70,11 @@ class AggregationDissemination(BasicMajority):
                 # run simulation
         for agent in ordering:
             if self.network.nodes[agent]["action"] == -1:
+                if high_val:
+                    # look for high degree neighbor that has already taken action
+                    degree_sorted_neighbors = sorted(dict(self.network.degree(self.network.neighbors(agent))), reverse=True)
+                    for neighbor in degree_sorted_neighbors:
+                        if (self.network.nodes[neighbor]["high value"] == 1 and self.network.nodes[neighbor]["action"] != -1):
+                            self.network.nodes[agent]["action"] = self.network.nodes[neighbor]["action"]
+                            break
                 self.make_decision(agent)

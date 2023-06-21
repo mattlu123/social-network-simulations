@@ -9,6 +9,7 @@ class BasicMajority:
         self.vg = vg
         self.vb = vb
         self.network = network
+        self.indep_dec = 0
 
     #Make a single decision
     def make_decision(self, agent):
@@ -20,6 +21,7 @@ class BasicMajority:
 
         if len(neighbors) < 2 or (len(n_actions) - n_actions.count(-1)) < 2:
             self.network.nodes[agent]["action"] = choice
+            self.indep_dec += 1
             return
 
         zeros = [num for num in n_actions if num == 0]
@@ -45,3 +47,6 @@ class BasicMajority:
         final_actions = np.array(list(nx.get_node_attributes(self.network, "action").values()))
         success_rate = len(final_actions[final_actions == self.theta]) / len(final_actions)
         return success_rate
+
+    def get_indep_decisions(self):
+        return self.indep_dec
