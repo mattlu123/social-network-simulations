@@ -7,7 +7,7 @@ from models.aggregation_dissemination import AggregationDissemination
 from utils import sim_n_times, plot_histograms
 
 #parameters
-n = 1000 #number of agents
+n = 5000 #number of agents
 p = 0.5 #ground truth probability
 q = 0.7 #private signal confidence
 vg, vb = 1, -1 #payoff coefficients
@@ -71,7 +71,7 @@ def run_sim_aggregate(n, p, q, vg, vb, theta, network, hi, lo):
 
     #make decisions
     agg_dis_model = AggregationDissemination(theta, q, p, vg, vb, network, hi, lo)
-    agg_dis_model.make_decisions(ordering, False)
+    agg_dis_model.make_decisions(ordering, True)
 
     return agg_dis_model.calc_success_rate(), agg_dis_model.get_indep_decisions()
 
@@ -79,6 +79,6 @@ def run_sim_aggregate(n, p, q, vg, vb, theta, network, hi, lo):
 basic_majority_res = sim_n_times("Basic Majority Model", 100, run_sim,
                                 (n, p, q, vg, vb, theta, power_law))
 aggregation_res = sim_n_times("Aggregation Model", 100, run_sim_aggregate,
-                            (n, p, q, vg, vb, theta, power_law, 1, 1))
-# plot_histograms("Basic Majority Model", basic_majority_res)
-# plot_histograms("Aggregation Model", aggregation_res)
+                            (n, p, q, vg, vb, theta, power_law, 0.01, 2))
+plot_histograms("Basic Majority Model", basic_majority_res)
+plot_histograms("Aggregation Model", aggregation_res)

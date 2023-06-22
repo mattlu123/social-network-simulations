@@ -23,7 +23,7 @@ class AggregationDissemination(BasicMajority):
 
         if high_val:
             for agent in top_percentile_nodes:
-                self.network.nodes[agent]['high_value'] = 1
+                self.network.nodes[agent]["high value"] = 1
 
         return top_percentile_nodes
 
@@ -41,17 +41,31 @@ class AggregationDissemination(BasicMajority):
 
         # Find the neighbors with degrees below the threshold
         lowest_percentile_neighbors = neighbors[degrees <= threshold_degree]
+        
 
         return np.random.permutation(lowest_percentile_neighbors)
+    
+    def get_n_lowest_neighbors(self, node, n):
+        # Get the neighbors of the given node
+        neighbors = self.network.neighbors(node)
+
+        # Sort neighbors based on their degrees
+        sorted_neighbors = sorted(neighbors, key=lambda x: self.network.degree[x])
+        n_lowest_neighbors = np.array(sorted_neighbors[0:n])
+        return np.random.permutation(n_lowest_neighbors)
 
     def make_decisions(self, ordering, high_val):
         highDegreeNodes = self.get_top_percentile_nodes(high_val)
+        #print(highDegreeNodes)
         for agent in highDegreeNodes:
-            lowDegreeNeighbors = self.get_lowest_percentile_neighbors(agent)
-
+            #lowDegreeNeighbors = self.get_lowest_percentile_neighbors(agent)
+            
+            lowDegreeNeighbors = self.get_n_lowest_neighbors(agent, 40)
             for Low_agent in lowDegreeNeighbors:
                 if self.network.nodes[Low_agent]["action"] == -1:
-                    self.make_decision(Low_agent)
+                    self.network.nodes[Low_agent]["action"] = np.random.choice([self.theta, 1 - self.theta], p=[self.q, 1 - self.q])
+                    self.indep_dec +=1
+                    #self.make_decision(Low_agent)
 
             neighbors = lowDegreeNeighbors
             actions = nx.get_node_attributes(self.network, "action")
@@ -64,6 +78,7 @@ class AggregationDissemination(BasicMajority):
             if len(neighbors) < 2 or (len(n_actions) - np.count_nonzero(n_actions == -1)) < 2:
                 # payoff = vg * ((p*signal)/(p*signal + (1-p)*(1-signal))) + vb * ((1-p)*(1-signal)/(p*signal + (1-p)*(1-signal)))
                 self.network.nodes[agent]["action"] = choice
+                self.indep_dec +=1
             elif len(zeros) - len(ones) > 1:
                 self.network.nodes[agent]["action"] = 0
             elif len(ones) - len(zeros) > 1:
@@ -72,7 +87,8 @@ class AggregationDissemination(BasicMajority):
                 # payoff = vg * ((p * signal) / (p * signal + (1 - p) * (1 - signal))) + vb * (
                 #            (1 - p) * (1 - signal) / (p * signal + (1 - p) * (1 - signal)))
                 self.network.nodes[agent]["action"] = choice
-
+                self.indep_dec += 1
+        
         # run simulation
         for agent in ordering:
             if self.network.nodes[agent]["action"] == -1:
@@ -81,10 +97,7 @@ class AggregationDissemination(BasicMajority):
                     neighbors = np.array(list(self.network.neighbors(agent)))
 
                     # Filter neighbors that are high degree and have taken action
-                    valid_neighbors = neighbors[
-                        (self.network.nodes[neighbors]["high value"] == 1) &
-                        (self.network.nodes[neighbors]["action"] != -1)
-                    ]
+                    valid_neighbors = np.array([n for n in neighbors if ((self.network.nodes[n]["high value"] == 1) and (self.network.nodes[n]["action"] != -1))])
 
                     if len(valid_neighbors) > 0:
                         # Sort valid neighbors by degree in descending order
@@ -95,5 +108,10 @@ class AggregationDissemination(BasicMajority):
                         # Set agent's action to the action of the highest degree valid neighbor
                         highest_degree_neighbor = sorted_valid_neighbors[0]
                         self.network.nodes[agent]["action"] = self.network.nodes[highest_degree_neighbor]["action"]
-
-                self.make_decision(agent)
+                        self.network.nodes[agent]["high value"] = 1
+                        
+                        #try majority rule for 
+                    else:
+                        self.make_decision(agent)
+                else:
+                    self.make_decision(agent)

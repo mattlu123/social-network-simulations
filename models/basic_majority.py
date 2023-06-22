@@ -13,6 +13,9 @@ class BasicMajority:
 
     #Make a single decision
     def make_decision(self, agent):
+        if self.network.nodes[agent]["action"] != -1:
+            return
+        
         #signal = nx.get_node_attributes(self.network, "private signal")[agent]
         neighbors = np.array([n for n in self.network.neighbors(agent)])
         actions = nx.get_node_attributes(self.network, "action")

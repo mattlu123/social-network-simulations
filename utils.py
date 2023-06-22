@@ -15,6 +15,7 @@ def sim_n_times(name, num_trials, sim_func, other_params):
     print(f"Avg learning rate: {np.mean(total_runs)}")
     print(f"Learning rate range: [{np.min(total_runs)}, {np.max(total_runs)}]")
     print(f"Cascades: {len(total_runs[total_runs < other_params[2]])}")
+    print(f"Median: {np.median(total_runs)}")
     print(f"Avg independent decisions: {np.mean(total_indep_dec)}")
     print()
 
