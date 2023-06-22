@@ -1,5 +1,4 @@
 import numpy as np
-import networkx as nx
 from scipy import stats
 import matplotlib.pyplot as plt
 
@@ -28,4 +27,20 @@ def plot_histograms(name, runs):
     plt.ylabel('Frequency')
     plt.title(name)
     plt.show()
+
+#finds the minimum k independent trials for a target success rate of 1-delta
+def find_delta_for_k_indep(deltas, q):
+    k = 0
+    sum = 0
+
+    res = np.zeros(len(deltas))
+    for idx, delta in enumerate(deltas):
+        k = 0
+        sum = 0
+        while sum < 1 - delta:
+            sum = 1 - stats.binom.cdf(k // 2, k, q)
+            k += 1
+        res[idx] = k
+        print(f"delta = {delta}: {k}")
+
 

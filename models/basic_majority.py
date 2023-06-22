@@ -13,19 +13,19 @@ class BasicMajority:
 
     #Make a single decision
     def make_decision(self, agent):
-        signal = nx.get_node_attributes(self.network, "private signal")[agent]
-        neighbors = [n for n in self.network.neighbors(agent)]
+        #signal = nx.get_node_attributes(self.network, "private signal")[agent]
+        neighbors = np.array([n for n in self.network.neighbors(agent)])
         actions = nx.get_node_attributes(self.network, "action")
-        n_actions = [actions[key] for key in neighbors]
+        n_actions = np.array([actions[key] for key in neighbors])
         choice = np.random.choice([self.theta, 1 - self.theta], p=[self.q, 1 - self.q])
 
-        if len(neighbors) < 2 or (len(n_actions) - n_actions.count(-1)) < 2:
+        if len(neighbors) < 2 or (len(n_actions) - np.count_nonzero(n_actions == -1)) < 2:
             self.network.nodes[agent]["action"] = choice
             self.indep_dec += 1
             return
 
-        zeros = [num for num in n_actions if num == 0]
-        ones = [num for num in n_actions if num == 1]
+        zeros = n_actions[n_actions == 0]
+        ones = n_actions[n_actions == 1]
         if len(zeros) - len(ones) > 1:
             self.network.nodes[agent]["action"] = 0
         elif len(ones) - len(zeros) > 1:

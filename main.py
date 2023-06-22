@@ -77,30 +77,8 @@ def run_sim_aggregate(n, p, q, vg, vb, theta, network, hi, lo):
 
 #results
 basic_majority_res = sim_n_times("Basic Majority Model", 100, run_sim,
-                                 (n, p, q, vg, vb, theta, power_law))
+                                (n, p, q, vg, vb, theta, power_law))
 aggregation_res = sim_n_times("Aggregation Model", 100, run_sim_aggregate,
-                              (n, p, q, vg, vb, theta, power_law, 1, 1))
-plot_histograms("Basic Majority Model", basic_majority_res)
-plot_histograms("Aggregation Model", aggregation_res)
-
-
-
-
-
-
-
-
-# deltas = [0.0001, 0.001, 0.005, 0.01, 0.03, 0.05, 0.1, 0.2]
-# k = 0
-# sum = 0
-#
-# res = np.zeros(len(deltas))
-# for idx, delta in enumerate(deltas):
-#     k = 0
-#     sum = 0
-#     while sum < 1 - delta:
-#         sum = 1 - stats.binom.cdf(k // 2, k, q)
-#         k += 1
-#     res[idx] = k
-#     print(f"delta = {delta}: {k}")
-
+                            (n, p, q, vg, vb, theta, power_law, 1, 1))
+# plot_histograms("Basic Majority Model", basic_majority_res)
+# plot_histograms("Aggregation Model", aggregation_res)
