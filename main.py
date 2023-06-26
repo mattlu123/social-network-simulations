@@ -7,7 +7,7 @@ from models.aggregation_dissemination import AggregationDissemination
 from utils import sim_n_times, plot_histograms
 
 #parameters
-n = 5000 #number of agents
+n = 341 #number of agents
 p = 0.5 #ground truth probability
 q = 0.7 #private signal confidence
 vg, vb = 1, -1 #payoff coefficients
@@ -15,8 +15,8 @@ theta = np.random.choice([0, 1], p=[p, 1-p]) #ground truth
 
 #graph construction
 tree = nx.random_tree(n=n, seed=0)
-b_factor = 3
-three_ary_tree = nx.full_rary_tree(b_factor, n)
+b_factor = 4
+r_ary_tree = nx.full_rary_tree(b_factor, n)
 m, k = 5, 100
 bipartite = nx.complete_multipartite_graph(m, k)
 watts_strogatz = nx.connected_watts_strogatz_graph(n, 6, 0.1, tries=100, seed=None)
@@ -76,9 +76,9 @@ def run_sim_aggregate(n, p, q, vg, vb, theta, network, hi, lo):
     return agg_dis_model.calc_success_rate(), agg_dis_model.get_indep_decisions()
 
 #results
-basic_majority_res = sim_n_times("Basic Majority Model", 100, run_sim,
-                                (n, p, q, vg, vb, theta, power_law))
-aggregation_res = sim_n_times("Aggregation Model", 100, run_sim_aggregate,
-                            (n, p, q, vg, vb, theta, power_law, 0.01, 2))
-plot_histograms("Basic Majority Model", basic_majority_res)
-plot_histograms("Aggregation Model", aggregation_res)
+basic_majority_res = sim_n_times("Basic Majority Model", 50, run_sim,
+                                (n, p, q, vg, vb, theta, r_ary_tree))
+# aggregation_res = sim_n_times("Aggregation Model", 1000, run_sim_aggregate,
+#                             (n, p, q, vg, vb, theta, power_law, 0.001, 2))
+# plot_histograms("Basic Majority Model", basic_majority_res)
+# plot_histograms("Aggregation Model", aggregation_res)
