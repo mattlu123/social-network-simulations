@@ -38,6 +38,7 @@ class GeneralAggregationDissemination(BasicMajority):
                 if self.network.nodes[indep_neighbor]["action"] == -1:
                     self.network.nodes[indep_neighbor]["action"] = np.random.choice([self.theta, 1 - self.theta], p=[self.q, 1 - self.q])
                     self.indep_dec += 1
+                    #self.make_decision(indep_neighbor)
 
             neighbors = k_indep_neighbors
             actions = nx.get_node_attributes(self.network, "action")
@@ -48,7 +49,6 @@ class GeneralAggregationDissemination(BasicMajority):
             ones = n_actions[n_actions == 1]
 
             if len(neighbors) < 2 or (len(n_actions) - np.count_nonzero(n_actions == -1)) < 2:
-                # payoff = vg * ((p*signal)/(p*signal + (1-p)*(1-signal))) + vb * ((1-p)*(1-signal)/(p*signal + (1-p)*(1-signal)))
                 self.network.nodes[agent]["action"] = choice
                 self.indep_dec += 1
             elif len(zeros) - len(ones) > 1:
@@ -56,35 +56,28 @@ class GeneralAggregationDissemination(BasicMajority):
             elif len(ones) - len(zeros) > 1:
                 self.network.nodes[agent]["action"] = 1
             else:
-                # payoff = vg * ((p * signal) / (p * signal + (1 - p) * (1 - signal))) + vb * (
-                #            (1 - p) * (1 - signal) / (p * signal + (1 - p) * (1 - signal)))
                 self.network.nodes[agent]["action"] = choice
                 self.indep_dec += 1
+                
+        #return back to neighbors of high degree nodes to go first
+        #BFS from high value nodes
+        for agent in seed_nodes:
+            visited = set()  # To keep track of visited nodes
+            queue = [agent]  # Queue for BFS traversal
+
+            while queue:
+                node = queue.pop(0)
+                visited.add(node)
+
+                neighbors = self.network.neighbors(node)
+                for neighbor in neighbors:
+                    if neighbor not in visited:
+                        queue.append(neighbor)
+                        visited.add(neighbor)
+                        AggregationDissemination.make_high_value_decision(self, neighbor)
 
         for agent in ordering:
-            if self.network.nodes[agent]["action"] == -1:
-                if high_val:
-                    # Get the neighbors of the agent
-                    neighbors = np.array(list(self.network.neighbors(agent)))
-
-                    # Filter neighbors that are high degree and have taken action
-                    valid_neighbors = np.array([n for n in neighbors if (
-                                (self.network.nodes[n]["high value"] == 1) and (
-                                    self.network.nodes[n]["action"] != -1))])
-
-                    if len(valid_neighbors) > 0:
-                        # Sort valid neighbors by degree in descending order
-                        valid_neighbors_degrees = np.array([self.network.degree[n] for n in valid_neighbors])
-                        sorted_indices = np.argsort(valid_neighbors_degrees)[::-1]
-                        sorted_valid_neighbors = valid_neighbors[sorted_indices]
-
-                        # Set agent's action to the action of the highest degree valid neighbor
-                        highest_degree_neighbor = sorted_valid_neighbors[0]
-                        self.network.nodes[agent]["action"] = self.network.nodes[highest_degree_neighbor]["action"]
-                        self.network.nodes[agent]["high value"] = 1
-
-                        # try majority rule for
-                    else:
-                        self.make_decision(agent)
-                else:
-                    self.make_decision(agent)
+            if high_val:
+                AggregationDissemination.make_high_value_decision(self, agent)
+            else:
+                self.make_decision(agent)

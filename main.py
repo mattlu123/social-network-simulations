@@ -4,10 +4,11 @@ from scipy import stats
 import matplotlib.pyplot as plt
 from models.basic_majority import BasicMajority
 from models.aggregation_dissemination import AggregationDissemination
+from models.general_agg_diss import GeneralAggregationDissemination
 from utils import sim_n_times, plot_histograms
 
 #parameters
-n = 341 #number of agents
+n = 1000 #number of agents
 p = 0.5 #ground truth probability
 q = 0.7 #private signal confidence
 vg, vb = 1, -1 #payoff coefficients
@@ -75,10 +76,33 @@ def run_sim_aggregate(n, p, q, vg, vb, theta, network, hi, lo):
 
     return agg_dis_model.calc_success_rate(), agg_dis_model.get_indep_decisions()
 
+def run_sim_general_aggregate(n, p, q, vg, vb, theta, network, seed, r, k):
+
+    #initialize network params
+    init_net(n, q, network)
+
+    #create a random node ordering
+    ordering = np.random.permutation(np.arange(0, n))
+    
+    
+
+    #make decisions
+    gen_agg_dis_model = GeneralAggregationDissemination(theta, q, p, vg, vb, network, seed, r, k)
+    gen_agg_dis_model.make_decisions(ordering, True)
+
+    return gen_agg_dis_model.calc_success_rate(), gen_agg_dis_model.get_indep_decisions()
+
 #results
-basic_majority_res = sim_n_times("Basic Majority Model", 50, run_sim,
-                                (n, p, q, vg, vb, theta, r_ary_tree))
+basic_majority_res = sim_n_times("Basic Majority Model", 100, run_sim,
+                                (n, p, q, vg, vb, theta, erdos))
 # aggregation_res = sim_n_times("Aggregation Model", 1000, run_sim_aggregate,
 #                             (n, p, q, vg, vb, theta, power_law, 0.001, 2))
-# plot_histograms("Basic Majority Model", basic_majority_res)
+r = 10
+k = 40
+seed = 2
+gen_agg_res = sim_n_times("General Aggregation Model", 100, run_sim_general_aggregate,
+                          (n, p, q, vg, vb, theta, erdos, seed, r, k))
+
+plot_histograms("Basic Majority Model", basic_majority_res)
 # plot_histograms("Aggregation Model", aggregation_res)
+plot_histograms("General Aggregation Model", gen_agg_res)
