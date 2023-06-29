@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from models.basic_majority import BasicMajority
 from models.aggregation_dissemination import AggregationDissemination
 from models.general_agg_diss import GeneralAggregationDissemination
-from utils import sim_n_times, plot_histograms
+from utils import sim_n_times, plot_histograms, plot, plot_heatmap
 
 #parameters
 n = 1000 #number of agents
@@ -93,16 +93,26 @@ def run_sim_general_aggregate(n, p, q, vg, vb, theta, network, seed, r, k):
     return gen_agg_dis_model.calc_success_rate(), gen_agg_dis_model.get_indep_decisions()
 
 #results
-basic_majority_res = sim_n_times("Basic Majority Model", 100, run_sim,
-                                (n, p, q, vg, vb, theta, erdos))
-# aggregation_res = sim_n_times("Aggregation Model", 1000, run_sim_aggregate,
-#                             (n, p, q, vg, vb, theta, power_law, 0.001, 2))
-r = 10
-k = 40
-seed = 2
-gen_agg_res = sim_n_times("General Aggregation Model", 100, run_sim_general_aggregate,
-                          (n, p, q, vg, vb, theta, erdos, seed, r, k))
+# basic_majority_res = sim_n_times("Basic Majority Model", 1000, run_sim,
+#                                 (n, p, q, vg, vb, theta, erdos))
+# # aggregation_res = sim_n_times("Aggregation Model", 1000, run_sim_aggregate,
+# #                             (n, p, q, vg, vb, theta, power_law, 0.001, 2))
+# r = 5
+# k = 40
+# seed = 2
+# gen_agg_res = sim_n_times("General Aggregation Model", 1000, run_sim_general_aggregate,
+#                           (n, p, q, vg, vb, theta, erdos, seed, r, k))
 
-plot_histograms("Basic Majority Model", basic_majority_res)
-# plot_histograms("Aggregation Model", aggregation_res)
-plot_histograms("General Aggregation Model", gen_agg_res)
+rs = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+seeds = [2, 4, 6, 8, 10, 12]
+
+res = np.zeros((len(seeds), len(rs)))
+for i, seed in enumerate(seeds):
+    res_rad = np.zeros(len(rs))
+    for j, rad in enumerate(rs):
+        avg_learn_rate = np.mean(sim_n_times("General Aggregation Model", 100, run_sim_general_aggregate,
+                                             (n, p, q, vg, vb, theta, erdos, seed, rad, k)))
+        res_rad[j] = avg_learn_rate
+    res[i] = res_rad
+
+plot_heatmap(res, "radius", "seed", rs, seeds, "Avg learning rate with diff radius and seed vals")

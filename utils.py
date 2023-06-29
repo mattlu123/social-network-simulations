@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 def sim_n_times(name, num_trials, sim_func, other_params):
     total_runs = np.zeros(num_trials)
@@ -23,9 +24,26 @@ def sim_n_times(name, num_trials, sim_func, other_params):
 
 def plot_histograms(name, runs):
     #Plot the histogram
-    plt.hist(runs, bins=100)
+    plt.hist(runs, bins=30)
     plt.xlabel('Value')
     plt.ylabel('Frequency')
+    plt.title(name)
+    plt.show()
+
+def plot(name, x_name, x, y):
+    #Plot the histogram
+    plt.plot(x, y)
+    plt.xlabel(x_name)
+    plt.ylabel("Avg learning rate")
+    plt.title(name)
+    plt.show()
+
+def plot_heatmap(data, x_label, y_label, x_ticks, y_ticks, name):
+    ax = sns.heatmap(data)
+    ax.set_xticklabels(x_ticks)
+    ax.set_yticklabels(y_ticks)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
     plt.title(name)
     plt.show()
 

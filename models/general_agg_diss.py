@@ -20,9 +20,12 @@ class GeneralAggregationDissemination(BasicMajority):
         return maximal_indep_set[random_indices]
 
     def get_seed(self, k):
-        nodes = np.array(self.network.nodes)
-        random_indices = np.random.choice(len(nodes), k, replace=False)
-        seed_nodes = nodes[random_indices]
+        # nodes = np.array(self.network.nodes)
+        # random_indices = np.random.choice(len(nodes), k, replace=False)
+        # seed_nodes = nodes[random_indices]
+        seed_nodes = np.array(nx.maximal_independent_set(self.network))
+        random_indices = np.random.choice(len(seed_nodes), k, replace=False)
+        seed_nodes = seed_nodes[random_indices]
         for agent in seed_nodes:
             self.network.nodes[agent]["high value"] = 1
         return seed_nodes
@@ -61,20 +64,20 @@ class GeneralAggregationDissemination(BasicMajority):
                 
         #return back to neighbors of high degree nodes to go first
         #BFS from high value nodes
-        for agent in seed_nodes:
-            visited = set()  # To keep track of visited nodes
-            queue = [agent]  # Queue for BFS traversal
-
-            while queue:
-                node = queue.pop(0)
-                visited.add(node)
-
-                neighbors = self.network.neighbors(node)
-                for neighbor in neighbors:
-                    if neighbor not in visited:
-                        queue.append(neighbor)
-                        visited.add(neighbor)
-                        AggregationDissemination.make_high_value_decision(self, neighbor)
+        # for agent in seed_nodes:
+        #     visited = set()  # To keep track of visited nodes
+        #     queue = [agent]  # Queue for BFS traversal
+        #
+        #     while queue:
+        #         node = queue.pop(0)
+        #         visited.add(node)
+        #
+        #         neighbors = self.network.neighbors(node)
+        #         for neighbor in neighbors:
+        #             if neighbor not in visited:
+        #                 queue.append(neighbor)
+        #                 visited.add(neighbor)
+        #                 AggregationDissemination.make_high_value_decision(self, neighbor)
 
         for agent in ordering:
             if high_val:
