@@ -11,12 +11,15 @@ def sim_n_times(name, num_trials, sim_func, other_params):
         total_runs[i], total_indep_dec[i] = sim_func(*other_params)
 
     total_runs = np.array(total_runs)
+    cascades = total_runs[total_runs < other_params[2]]
 
     print(name)
     print(f"Avg learning rate: {np.mean(total_runs)}")
     print(f"Learning rate range: [{np.min(total_runs)}, {np.max(total_runs)}]")
-    print(f"Cascades: {len(total_runs[total_runs < other_params[2]])}")
+    print(f"Cascades: {len(cascades)}")
+    print(f"Cascade rate: {len(cascades)/len(total_runs)}")
     print(f"Median: {np.median(total_runs)}")
+    print(f"Variance: {np.var(total_runs)}")
     print(f"Avg independent decisions: {np.mean(total_indep_dec)}")
     print()
 
@@ -30,11 +33,11 @@ def plot_histograms(name, runs):
     plt.title(name)
     plt.show()
 
-def plot(name, x_name, x, y):
+def plot(name, x_name, y_name, x, y):
     #Plot the histogram
     plt.plot(x, y)
     plt.xlabel(x_name)
-    plt.ylabel("Avg learning rate")
+    plt.ylabel(y_name)
     plt.title(name)
     plt.show()
 
@@ -49,8 +52,6 @@ def plot_heatmap(data, x_label, y_label, x_ticks, y_ticks, name):
 
 #finds the minimum k independent trials for a target success rate of 1-delta
 def find_delta_for_k_indep(deltas, q):
-    k = 0
-    sum = 0
 
     res = np.zeros(len(deltas))
     for idx, delta in enumerate(deltas):
@@ -61,5 +62,4 @@ def find_delta_for_k_indep(deltas, q):
             k += 1
         res[idx] = k
         print(f"delta = {delta}: {k}")
-
 
