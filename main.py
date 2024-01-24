@@ -6,7 +6,10 @@ from models.basic_majority import BasicMajority
 from models.aggregation_dissemination import AggregationDissemination
 from models.general_agg_diss import GeneralAggregationDissemination
 from models.basic_aggregation import BasicAggregation
+from models.two_neighbors import TwoNeighbors
+from models.two_neighbors_high_val import TwoNeighborsHighVal
 from utils import sim_n_times, plot_histograms, plot, plot_heatmap
+import time
 
 #parameters
 n = 300 #number of agents
@@ -79,13 +82,21 @@ def spiral_ordering(nodes, n):
 
     return res
 
+def degree_ordering_increasing(network):
+    nodes_by_degree = sorted(network.nodes(), key=lambda x: network.degree(x))
+    return nodes_by_degree
+
+def degree_ordering_decreasing(network):
+    nodes_by_degree = sorted(network.nodes(), key=lambda x: network.degree(x), reverse=True)
+    return nodes_by_degree
+
 def run_sim(n, p, q, vg, vb, theta, network):
     #initialize network params
     init_net(n, q, network)
 
     #create a random node ordering
-    #ordering = random_ordering(list(network.nodes()))
-    ordering = list(network.nodes())
+    ordering = random_ordering(list(network.nodes()))
+    #ordering = list(network.nodes())
 
     #construct the model
     basic_majority_model = BasicMajority(theta, q, p, vg, vb, network)
@@ -531,16 +542,88 @@ def run_sim3(n, p, q, vg, vb, theta, network, k):
     # final measurements
     return basic_aggregation_model.calc_success_rate(), basic_aggregation_model.get_indep_decisions()
 
-ns = np.arange(50, 1001, 10)
-res = np.zeros(len(ns))
+# ns = np.arange(50, 1001, 10)
+# res = np.zeros(len(ns))
 
-for i, n in enumerate(ns):
-    p_law1 = nx.barabasi_albert_graph(n, k, seed=None, initial_graph=clique)
-    print("n: ", n)
-    res[i] = np.mean(sim_n_times("Basic Agg model", 500, run_sim3, (n, p, q, vg, vb, theta, p_law1, 6)))
+# for i, n in enumerate(ns):
+#     p_law1 = nx.barabasi_albert_graph(n, k, seed=None, initial_graph=clique)
+#     print("n: ", n)
+#     res[i] = np.mean(sim_n_times("Basic Agg model", 500, run_sim3, (n, p, q, vg, vb, theta, p_law1, 6)))
+#
+# plt.plot(ns, res, color="red")
+# plt.xlabel("# of nodes")
+# plt.ylabel("learning rate")
+# plt.title(f"basic aggregation avg learning rate")
+# plt.show()
 
-plt.plot(ns, res, color="red")
-plt.xlabel("# of nodes")
+def run_sim_4(n, p, q, vg, vb, theta, network, high_value):
+    # initialize network params
+    init_net(n, q, network)
+
+    # create a random node ordering
+    ordering = random_ordering(list(network.nodes()))
+
+    # construct the model
+    two_neighbors_model = TwoNeighbors(theta, q, p, vg, vb, network, high_value)
+    two_neighbors_model.make_decisions(ordering)
+
+    # final measurements
+    return two_neighbors_model.calc_success_rate(), two_neighbors_model.get_indep_decisions()
+
+def run_sim_5(n, p, q, vg, vb, theta, network, threshold, k):
+    # initialize network params
+    init_net(n, q, network)
+
+    # create a random node ordering
+    ordering = degree_ordering_decreasing(network)
+
+    # construct the model
+    two_neighbors_model = TwoNeighborsHighVal(theta, q, p, vg, vb, network, threshold, k)
+    two_neighbors_model.make_decisions(ordering)
+
+    # final measurements
+    return two_neighbors_model.calc_success_rate(), two_neighbors_model.get_indep_decisions()
+
+#sim_n_times("Two Neighbors Model", 300, run_sim_4, (n, p, q, vg, vb, theta, erdos))
+
+#ns = np.arange(50, 3001, 50)
+# qs = np.arange(0.51, 0.99, 0.05)
+# res_order = np.zeros(len(qs))
+# res_random = np.zeros(len(qs))
+#
+new_n = 1000
+#
+# for i, q in enumerate(qs):
+#     erdos = nx.erdos_renyi_graph(new_n, np.log(new_n)/new_n, seed=None, directed=False)
+#     print("q: ", q)
+#     res_order[i] = np.mean(sim_n_times("Two Neighbors Model", 300, run_sim_4, (new_n, p, q, vg, vb, theta, erdos)))
+#     res_random[i] = np.mean(sim_n_times("Random ordering", 300, run_sim, (new_n, p, q, vg, vb, theta, erdos)))
+#
+# plt.plot(qs, res_order, color="red", label="two neighbors")
+# plt.plot(qs, res_random, color="blue", label="random")
+# plt.xlabel("q")
+# plt.ylabel("learning rate")
+# plt.title(f"q vs two neighbors model learning rate")
+# plt.legend()
+# plt.show()
+
+ps = np.arange(0.005, 0.01, 0.002)
+res_order = np.zeros(len(ps))
+res_order_2 = np.zeros(len(ps))
+res_random = np.zeros(len(ps))
+
+for i, prob in enumerate(ps):
+    erdos = nx.erdos_renyi_graph(new_n, prob, seed=None, directed=False)
+    print("edge prob: ", prob)
+    res_order[i] = np.mean(sim_n_times("Two Neighbors Model", 300, run_sim_4, (new_n, p, 0.7, vg, vb, theta, erdos, False)))
+    res_order_2[i] = np.mean(sim_n_times("Two Neighbors + High Val", 300, run_sim_5, (new_n, p, 0.7, vg, vb, theta, erdos, 0.5, 8)))
+    res_random[i] = np.mean(sim_n_times("Random ordering", 300, run_sim, (new_n, p, 0.7, vg, vb, theta, erdos)))
+
+plt.plot(ps, res_order, color="red", label="two neighbors")
+plt.plot(ps, res_order_2, color="orange", label="high value")
+plt.plot(ps, res_random, color="blue", label="random")
+plt.xlabel("edge prob")
 plt.ylabel("learning rate")
-plt.title(f"basic aggregation avg learning rate")
+plt.title(f"edge prob vs two neighbors model learning rate")
+plt.legend()
 plt.show()

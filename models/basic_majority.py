@@ -52,3 +52,12 @@ class BasicMajority:
 
     def get_indep_decisions(self):
         return self.indep_dec
+
+    def find_r_neighborhood(self, r, node):
+        return nx.ego_graph(self.network, node, r, center=False)
+
+    def find_k_indep(self, neighborhood, k):
+        maximal_indep_set = np.array(nx.maximal_independent_set(neighborhood))
+        k = k if len(maximal_indep_set) > k else len(maximal_indep_set)
+        random_indices = np.random.choice(len(maximal_indep_set), k, replace=False)
+        return maximal_indep_set[random_indices]
